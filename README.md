@@ -10,11 +10,6 @@ A Laravel package that allows you to launch and manage all your development serv
 -   ⚙️ Interactive menu to start, stop, or restart individual or all commands while running.
 -   ✅ Cross-platform support for Windows, macOS, and Linux.
 
-## 📋 Requirements
-
-- **PHP** 8.1+
-- **Laravel** 10.0+
-
 ## 📦 Installation
 
 You can install the package via composer:
@@ -26,7 +21,7 @@ composer require maherremitadz/laravel-dev --dev
 Next, publish the configuration file using the `vendor:publish` command. This will create a `config/laravel_dev.php` file in your project.
 
 ```bash
-php artisan vendor:publish --provider="maherremitadz\LaravelDev\LaravelDevServiceProvider" --tag="config"
+php artisan vendor:publish --provider="maherremita\LaravelDev\LaravelDevServiceProvider" --tag="config"
 ```
 
 ## Usage
