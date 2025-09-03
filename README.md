@@ -15,7 +15,7 @@ A Laravel package that allows you to launch and manage all your development serv
 You can install the package via composer:
 
 ```bash
-composer require maherremitadz/laravel-dev --dev
+composer require maherremita/laravel-dev --dev
 ```
 
 Next, publish the configuration file using the `vendor:publish` command. This will create a `config/laravel_dev.php` file in your project.
