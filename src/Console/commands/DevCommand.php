@@ -8,7 +8,7 @@ use maherremita\LaravelDev\Services\DevService;
 
 class DevCommand extends Command
 {
-    protected $signature = 'dev';
+    protected $signature = 'dev {--start : Start all development commands immediately}';
 
     protected $description = 'Launch all development commands in separate terminals';
 
@@ -22,11 +22,15 @@ class DevCommand extends Command
     {
         parent::__construct();
         $this->serviceManager = $serviceManager;
-        $this->commands = Config::get('laravel_dev.commands', []);
+        // Get all commands (static + dynamic) from the service manager
+        $this->commands = $this->serviceManager->commands;
     }
 
     public function handle()
     {
+        // Refresh commands to get latest dynamic commands
+        $this->serviceManager->refreshCommands();
+        $this->commands = $this->serviceManager->commands;
         $commands = $this->commands;
 
         if (empty($commands)) {
@@ -36,32 +40,55 @@ class DevCommand extends Command
             return self::FAILURE;
         }
 
-        // start all development commands
-        $this->startCommands();
+        $this->info('📋 Development Command Manager');
+        $this->info('Available commands: ' . count($commands));
+        $this->newLine();
+
+        // Ask user if they want to start all commands immediately
+        // Check for --start flag to start all commands immediately
+        if ($this->option('start') || $this->confirm('Do you want to start all development commands now?', false)) {
+            $this->startCommands();
+        }
+        
         // run the command loop
         while (true) {
             // prompt the user for an action
             $action = $this->choice(
                 'perform action',
                 [
+                    'show all commands',
                     'start command',
+                    'start all commands',
                     'stop command',
                     'stop all commands',
                     'restart command',
                     'restart all commands',
+                    'refresh commands',
                     'exit'
                 ]
             );
 
+            // Show all available commands
+            if ($action === 'show all commands') {
+                $this->showAllCommands();
+            }
+
             // start specific command
             if ($action === 'start command') {
+                // Refresh commands to get latest dynamic commands
+                $this->refreshAvailableCommands();
                 // Prompt the user to choose the command he wants to start
                 $commandName = $this->choice(
                     'choose the command name you want to start',
-                    array_keys($commands)
+                    array_keys($this->commands)
                 );
                 // Start the selected command
                 $this->startCommand($commandName);
+            }
+
+            // start all commands
+            if ($action === 'start all commands') {
+                $this->startCommands();
             }
 
             // Stop specific command
@@ -109,6 +136,12 @@ class DevCommand extends Command
             // restart all commands
             if ($action === 'restart all commands') {
                 $this->restartCommands();
+            }
+
+            // refresh commands manually
+            if ($action === 'refresh commands') {
+                $this->refreshAvailableCommands();
+                $this->info('✅ Commands refreshed! Available commands: ' . count($this->commands));
             }
 
             // exit
@@ -229,4 +262,47 @@ class DevCommand extends Command
             return self::FAILURE;
         }
     }
+
+    // Show all available commands
+    protected function showAllCommands(): void
+    {
+        $this->refreshAvailableCommands();
+        
+        $this->info('📋 Available Commands:');
+        $this->newLine();
+
+        $staticCommands = Config::get('laravel_dev.commands', []);
+        $allCommands = $this->commands;
+
+        // Show static commands
+        if (!empty($staticCommands)) {
+            $this->info('🔧 Static Commands:');
+            foreach ($staticCommands as $name => $command) {
+                $commandText = is_array($command) ? $command['command'] : $command;
+                $shortCommand = strlen($commandText) > 60 ? substr($commandText, 0, 57) . '...' : $commandText;
+                $this->line("  • {$name}: {$shortCommand}");
+            }
+            $this->newLine();
+        }
+
+        // Show dynamic commands
+        $dynamicCommands = array_diff_key($allCommands, $staticCommands);
+        if (!empty($dynamicCommands)) {
+            $this->info('🔄 Dynamic Commands:');
+            foreach ($dynamicCommands as $name => $command) {
+                $commandText = is_array($command) ? $command['command'] : $command;
+                $shortCommand = strlen($commandText) > 60 ? substr($commandText, 0, 57) . '...' : $commandText;
+                $this->line("  • {$name}: {$shortCommand}");
+            }
+            $this->newLine();
+        }
+    }
+
+    // Refresh available commands
+    protected function refreshAvailableCommands(): void
+    {
+        $this->serviceManager->refreshCommands();
+        $this->commands = $this->serviceManager->commands;
+    }
+    
 }

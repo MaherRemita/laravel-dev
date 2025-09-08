@@ -2,13 +2,15 @@
 
 namespace maherremita\LaravelDev\Services;
 
+use Exception;
 use Illuminate\Contracts\Process\ProcessResult;
-use RuntimeException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Process;
-use maherremita\LaravelDev\Enums\MacColors;
+use RuntimeException;
 use maherremita\LaravelDev\Enums\LinuxColors;
+use maherremita\LaravelDev\Enums\MacColors;
 use maherremita\LaravelDev\Enums\WindowsColors;
 
 class DevService
@@ -25,7 +27,36 @@ class DevService
     public function __construct()
     {
         $this->processes = collect();
-        $this->commands = Config::get('laravel_dev.commands', []);
+        $this->commands = $this->getAllCommands();
+    }
+
+    // Get all commands (static + dynamic)
+    protected function getAllCommands(): array
+    {
+        $staticCommands = Config::get('laravel_dev.commands', []);
+        $dynamicCommandsConfig = Config::get('laravel_dev.dynamic_commands', []);
+        $dynamicCommands = [];
+
+        foreach ($dynamicCommandsConfig as $key => $code) {
+            try {
+                // Evaluate the PHP code to get the dynamic commands
+                $result = eval("return $code");
+                if (is_array($result)) {
+                    $dynamicCommands = array_merge($dynamicCommands, $result);
+                }
+            } catch (Exception $e) {
+                // Logging is not available here; optionally handle the error silently or rethrow
+            }
+        }
+
+        return array_merge($staticCommands, $dynamicCommands);
+    }
+
+    // Refresh commands (useful when dynamic data changes)
+    public function refreshCommands(): void
+    {
+        $this->commands = $this->getAllCommands();
+        Log::info('Commands refreshed', ['commands' => $this->commands]);
     }
 
     // run process
@@ -61,8 +92,13 @@ class DevService
     }
 
     // start development command
-    public function startCommand(string $name): void
+    public function startCommand(string $name, bool $refresh = true): void
     {
+        if ($refresh) {
+            // Refresh commands to get latest dynamic commands
+            $this->refreshCommands();
+        }
+
         // get the command config
         $commandConfig = $this->findCommand($name);
         if (!$commandConfig) {
@@ -121,9 +157,11 @@ class DevService
     // Start the development commands
     public function startAllCommands(): void
     {
+        // Refresh commands to get latest dynamic commands
+        $this->refreshCommands();
         $commands = $this->commands;
         foreach ($commands as $name => $command) {
-            $this->startCommand($name);
+            $this->startCommand($name, false);
         }
     }
 
@@ -209,7 +247,7 @@ class DevService
     protected function buildMacCommand(string $name, string $command, array $colors): array
     {
         // tab variable name
-        $tabName = strtolower(str_replace(' ', '_', $name));
+        $tabName = 'tab_' . preg_replace('/[^a-zA-Z0-9]/', '_', strtolower($name));
         // working directory
         $workingDirectory =  base_path();
         // base command
