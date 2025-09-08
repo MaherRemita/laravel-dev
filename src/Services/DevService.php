@@ -34,6 +34,13 @@ class DevService
     protected function getAllCommands(): array
     {
         $staticCommands = Config::get('laravel_dev.commands', []);
+        $dynamicCommands = $this->getDynamicCommands();
+
+        return array_merge($staticCommands, $dynamicCommands);
+    }
+
+    protected function getDynamicCommands():array
+    {
         $dynamicCommandsConfig = Config::get('laravel_dev.dynamic_commands', []);
         $dynamicCommands = [];
 
@@ -48,15 +55,13 @@ class DevService
                 // Logging is not available here; optionally handle the error silently or rethrow
             }
         }
-
-        return array_merge($staticCommands, $dynamicCommands);
+        return $dynamicCommands;
     }
 
     // Refresh commands (useful when dynamic data changes)
     public function refreshCommands(): void
     {
         $this->commands = $this->getAllCommands();
-        Log::info('Commands refreshed', ['commands' => $this->commands]);
     }
 
     // run process

@@ -77,19 +77,17 @@ return [
     |
     */
     'dynamic_commands' => [
-
-        'colored_commands' => 'array_reduce(
-            range(1, 3),
-            function ($carry, $number) {
-                $carry["Task {$number}"] = [
-                    "command" => "echo Executing task {$number}",
-                    "colors" => ["text" => "green", "background" => "black"]
-                ];
-                return $carry;
-            },
-            []
-        );'
-        
+        // 'colored_commands' => 'array_reduce(
+        //         range(1, 3),
+        //         function ($carry, $number) {
+        //             $carry["Task {$number}"] = [
+        //                 "command" => "echo Executing task {$number}",
+        //                 "colors" => ["text" => "green", "background" => "black"]
+        //             ];
+        //             return $carry;
+        //         },
+        //         []
+        //     );'
     ]
-
+    
 ];

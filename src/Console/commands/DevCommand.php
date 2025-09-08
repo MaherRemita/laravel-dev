@@ -8,7 +8,7 @@ use maherremita\LaravelDev\Services\DevService;
 
 class DevCommand extends Command
 {
-    protected $signature = 'dev {--start : Start all development commands immediately}';
+    protected $signature = 'dev';
 
     protected $description = 'Launch all development commands in separate terminals';
 
@@ -25,15 +25,10 @@ class DevCommand extends Command
         // Get all commands (static + dynamic) from the service manager
         $this->commands = $this->serviceManager->commands;
     }
-
+    
     public function handle()
     {
-        // Refresh commands to get latest dynamic commands
-        $this->serviceManager->refreshCommands();
-        $this->commands = $this->serviceManager->commands;
-        $commands = $this->commands;
-
-        if (empty($commands)) {
+        if (empty($this->commands)) {
             $this->error('No commands configured. Please publish and configure the config file.');
             $this->info('php artisan vendor:publish --provider="maherremita\LaravelDev\LaravelDevServiceProvider" --tag="config"');
 
@@ -41,15 +36,11 @@ class DevCommand extends Command
         }
 
         $this->info('📋 Development Command Manager');
-        $this->info('Available commands: ' . count($commands));
+        $this->info('Available commands: ' . count($this->commands));
         $this->newLine();
 
-        // Ask user if they want to start all commands immediately
-        // Check for --start flag to start all commands immediately
-        if ($this->option('start') || $this->confirm('Do you want to start all development commands now?', false)) {
-            $this->startCommands();
-        }
-        
+        // start all development commands
+        $this->startCommands();
         // run the command loop
         while (true) {
             // prompt the user for an action
