@@ -7,11 +7,14 @@ beforeEach(function () {
     // Define constants that can be used in all tests
     $this->availableCommands = ['Laravel Server', 'Queue Worker', 'Vite Dev Server'];
     $this->actionChoices = [
+        'show all commands',
         'start command',
+        'start all commands',
         'stop command',
         'stop all commands',
         'restart command',
         'restart all commands',
+        'refresh commands',
         'exit'
     ];
  
@@ -50,6 +53,8 @@ test('it calls startAllCommands on launch and stopAllCommands on exit', function
     // Create the mock
     $mock = $this->mock(DevService::class);
 
+    $mock->commands = config('laravel_dev.commands');
+
     $mock->shouldReceive('startAllCommands')->once()->ordered();
     $mock->shouldReceive('stopAllCommands')->once()->ordered();
 
@@ -64,9 +69,12 @@ test('it calls startAllCommands on launch and stopAllCommands on exit', function
 test('it can start a specific command', function () {
     // Create the mock
     $mock = $this->mock(DevService::class);
+
+    $mock->commands = config('laravel_dev.commands');
     $mock->processes = collect([]);
 
     $mock->shouldReceive('startAllCommands')->once()->ordered();
+    $mock->shouldReceive('refreshCommands')->once()->ordered();
     $mock->shouldReceive('startCommand')->with('Queue Worker')->once()->ordered();
     $mock->shouldReceive('stopAllCommands')->once()->ordered();
 
@@ -85,6 +93,8 @@ test('it can start a specific command', function () {
 test('it can stop a specific command', function () {
     // Create the mock and tell it that a process is "running".
     $mock = $this->mock(DevService::class);
+
+    $mock->commands = config('laravel_dev.commands');
     $mock->processes = collect([
         ['name' => 'Laravel Server', 'id' => 123],
         ['name' => 'Queue Worker', 'id' => 456],
@@ -108,6 +118,8 @@ test('it can stop a specific command', function () {
 test('it can restart a specific command', function () {
     // Create the mock and tell it a process is running.
     $mock = $this->mock(DevService::class);
+
+    $mock->commands = config('laravel_dev.commands');
     $mock->processes = collect([
         ['name' => 'Laravel Server', 'id' => 123],
         ['name' => 'Queue Worker', 'id' => 456],
@@ -131,6 +143,8 @@ test('it can restart a specific command', function () {
 test('it shows an error when trying to stop or restart a command if none are running', function () {
     // Create the mock and tell it that NO processes are running.
     $mock = $this->mock(DevService::class);
+
+    $mock->commands = config('laravel_dev.commands');
     $mock->processes = collect([]); // Empty collection
 
     // Set expectations

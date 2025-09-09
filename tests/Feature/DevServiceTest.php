@@ -268,9 +268,12 @@ test('it runs the correct start process command for macOS - simple command', fun
     // set os to mac
     $this->service->operatingSystem = 'Darwin';
     // start simple configured command (without colors)
-    $this->service->startCommand('Laravel Server');
+    $name = 'Laravel Server';
+    $tabName = 'tab_laravel_server';
 
-    Process::assertRan(function ($process) {
+    $this->service->startCommand($name);
+
+    Process::assertRan(function ($process) use ($tabName) {
         // working directory
         $workingDirectory =  base_path();
 
@@ -278,8 +281,8 @@ test('it runs the correct start process command for macOS - simple command', fun
             'osascript',
             '-e', 'tell application "Terminal"',
             '-e', 'activate',
-            '-e', "set laravel_server to do script \"clear && cd \\\"$workingDirectory\\\" && php artisan serve\"",
-            '-e', "set custom title of laravel_server to \"Laravel Server\"",
+            '-e', "set $tabName to do script \"clear && cd \\\"$workingDirectory\\\" && php artisan serve\"",
+            '-e', "set custom title of $tabName to \"Laravel Server\"",
             '-e', "delay 0.2",
             '-e', "set windowID to id of front window",
             '-e', "return windowID",
@@ -292,10 +295,12 @@ test('it runs the correct start process command for for macOS - complex command 
     // set os to mac
     $this->service->operatingSystem = 'Darwin';
     // start complex configured command (with colors)
-    $this->service->startCommand('Queue Worker');
+    $name = 'Queue Worker';
+    $tabName = 'tab_queue_worker';
 
+    $this->service->startCommand($name);
 
-    Process::assertRan(function ($process) {
+    Process::assertRan(function ($process) use ($tabName) {
         // dd($process->command);
         // working directory
         $workingDirectory =  base_path();
@@ -304,10 +309,10 @@ test('it runs the correct start process command for for macOS - complex command 
             'osascript',
             '-e', 'tell application "Terminal"',
             '-e', 'activate',
-            '-e', "set queue_worker to do script \"clear && cd \\\"$workingDirectory\\\" && php artisan queue:work\"",
-            '-e', "set custom title of queue_worker to \"Queue Worker\"",
-            '-e', "set background color of queue_worker to \"yellow\"",
-            '-e', "set normal text color of queue_worker to \"green\"",
+            '-e', "set $tabName to do script \"clear && cd \\\"$workingDirectory\\\" && php artisan queue:work\"",
+            '-e', "set custom title of $tabName to \"Queue Worker\"",
+            '-e', "set background color of $tabName to \"yellow\"",
+            '-e', "set normal text color of $tabName to \"green\"",
             '-e', "delay 0.2",
             '-e', "set windowID to id of front window",
             '-e', "return windowID",

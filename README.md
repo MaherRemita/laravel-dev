@@ -5,6 +5,7 @@ A Laravel package that allows you to launch and manage all your development serv
 ## ✨ Features
 
 -   🚀 Launch all your development servers & commands with a single command.
+-   ➕ Create and manage commands at runtime, not just from the config file.
 -   🖥️ Each process runs in a new, separate terminal window.
 -   🎨 Customize terminal colors for each command for better visual organization.
 -   ⚙️ Interactive menu to start, stop, or restart individual or all commands while running.
@@ -28,28 +29,50 @@ php artisan vendor:publish --provider="maherremita\LaravelDev\LaravelDevServiceP
 
 ### 1. ⚙️ Configure Your Commands
 
+
+
 Open the `config/laravel_dev.php` file and define the commands you want to manage. You can add as many as you need.
 
-```php
-// config/laravel_dev.php
-return [
-    'commands' => [
-        // Simple format
-        'Laravel Server' => 'php artisan serve',
-        'Queue Worker' => 'php artisan queue:work',
+#### Static Commands
 
-        // Advanced format with custom colors
-        'Vite Dev Server' => [
-            'command' => 'npm run dev --watch',
-            'colors' => [
-                'text' => 'Green',
-                'background' => 'Black'
-            ]
-        ],
-        'Reverb Server' => 'php artisan reverb:start',
-    ],
-];
+Define your commands as usual in the `commands` array:
+
+```php
+'commands' => [
+    'Laravel Server' => 'php artisan serve',
+    'Queue Worker' => 'php artisan queue:work',
+    // ...
+],
 ```
+
+#### Dynamic Commands
+
+You can also generate commands at runtime, e.g. from the database or other sources. Use the `dynamic_commands` array for this. Each entry contains PHP code as a string, which is evaluated at runtime and must return an array of commands (like the `commands` array above).
+
+**Example:**
+
+```php
+'dynamic_commands' => [
+    'colored_commands' => 'array_reduce(
+        range(1, 3),
+        function ($carry, $number) {
+            $carry["Task {$number}"] = [
+                "command" => "echo Executing task {$number}",
+                "colors" => ["text" => "green", "background" => "black"]
+            ];
+            return $carry;
+        },
+        []
+    );',
+    // ...
+]
+```
+
+**Notes:**
+- The PHP code is executed with `eval()` and must return an associative array.
+- Quotes must be escaped (`\'` or `\"`).
+- The code must end with a semicolon (`;`).
+
 
 ### 2. 🚀 Run the Dev Command
 
@@ -64,11 +87,15 @@ This will launch all the commands defined in your configuration file, each in it
 ### 3. ⚙️ Manage Your Processes
 
 Once running, you can choose from the following actions:
+-   `show all commands`: Display a list of all configured commands.
 -   `start command`: Start a configured command that is not currently running.
+-   `start all commands`: Start all configured commands.
 -   `stop command`: Stop a specific running command.
 -   `stop all commands`: Stop all currently running commands.
 -   `restart command`: Restart a specific running command.
 -   `restart all commands`: Stop and then start all configured commands.
+-   `refresh commands`: Reload the configuration and update the list of commands.
+-   `exit`: Exit the interactive menu and stop managing processes.
 
 
 ## 🎨 Available Colors
