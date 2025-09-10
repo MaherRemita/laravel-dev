@@ -39,9 +39,17 @@ Define your commands as usual in the `commands` array:
 
 ```php
 'commands' => [
+    // Simple format
     'Laravel Server' => 'php artisan serve',
     'Queue Worker' => 'php artisan queue:work',
-    // ...
+    // Advanced format with custom colors
+    'Vite Dev Server' => [
+        'command' => 'npm run dev --watch',
+        'colors' => [
+            'text' => 'Green',
+            'background' => 'Black'
+        ]
+    ],
 ],
 ```
 
