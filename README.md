@@ -13,7 +13,7 @@ A Laravel package that allows you to launch and manage all your development serv
 
 ## 🚀 Demo
 
-<video src="media/video.mp4" controls="controls" style="max-width: 720px;"></video>
+https://github.com/user-attachments/assets/9eecce7f-19f2-43ce-9c1c-efa58f5b31ae
 
 *A quick demonstration of how Laravel Dev works.*
 
