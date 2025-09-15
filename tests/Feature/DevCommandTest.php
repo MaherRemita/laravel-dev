@@ -6,17 +6,6 @@ use maherremita\LaravelDev\Services\DevService;
 beforeEach(function () {
     // Define constants that can be used in all tests
     $this->availableCommands = ['Laravel Server', 'Queue Worker', 'Vite Dev Server'];
-    $this->actionChoices = [
-        'show all commands',
-        'start command',
-        'start all commands',
-        'stop command',
-        'stop all commands',
-        'restart command',
-        'restart all commands',
-        'refresh commands',
-        'exit'
-    ];
  
     // Set a default config for the tests
     config(['laravel_dev.commands' => [
@@ -54,13 +43,26 @@ test('it calls startAllCommands on launch and stopAllCommands on exit', function
     $mock = $this->mock(DevService::class);
 
     $mock->commands = config('laravel_dev.commands');
+    $mock->processes = collect([
+        ['name' => 'Laravel Server', 'id' => 1],
+        ['name' => 'Queue Worker', 'id' => 2],
+        ['name' => 'Vite Dev Server', 'id' => 3],
+    ]);
 
     $mock->shouldReceive('startAllCommands')->once()->ordered();
     $mock->shouldReceive('stopAllCommands')->once()->ordered();
 
     // Simulate user input
     $this->artisan('dev')
-    ->expectsChoice('perform action', 'exit', $this->actionChoices)
+    ->expectsChoice('perform action', 'exit', [
+        'show all commands',
+        'stop command',
+        'stop all commands',
+        'restart command',
+        'restart all commands',
+        'refresh commands',
+        'exit'
+    ])
     ->expectsOutput('Exiting...')
     ->assertSuccessful();
 
@@ -71,20 +73,33 @@ test('it can start a specific command', function () {
     $mock = $this->mock(DevService::class);
 
     $mock->commands = config('laravel_dev.commands');
-    $mock->processes = collect([]);
+    $mock->processes = collect([
+        ['name' => 'Laravel Server', 'id' => 123],
+    ]);
 
     $mock->shouldReceive('startAllCommands')->once()->ordered();
     $mock->shouldReceive('refreshCommands')->once()->ordered();
     $mock->shouldReceive('startCommand')->with('Queue Worker')->once()->ordered();
     $mock->shouldReceive('stopAllCommands')->once()->ordered();
 
+    $actions = [
+        'show all commands',
+        'start command',
+        'stop command',
+        'stop all commands',
+        'restart command',
+        'restart all commands',
+        'refresh commands',
+        'exit'
+    ];
+
     // Run the command and simulate a sequence of user inputs
     $this->artisan('dev')
-        ->expectsChoice('perform action', 'start command', $this->actionChoices)
-        ->expectsChoice('choose the command name you want to start', 'Queue Worker', $this->availableCommands)
+        ->expectsChoice('perform action', 'start command', $actions)
+        ->expectsChoice('choose the command name you want to start', 'Queue Worker', ['Laravel Server', 'Queue Worker', 'Vite Dev Server', 'Back'])
         ->expectsOutput('🚀 Launching development command: Queue Worker...')
         // We need a final action to exit the while(true) loop for the test to finish.
-        ->expectsChoice('perform action', 'exit', $this->actionChoices)
+        ->expectsChoice('perform action', 'exit', $actions)
         ->expectsOutput('Exiting...')
         ->assertSuccessful();
 
@@ -100,6 +115,17 @@ test('it can stop a specific command', function () {
         ['name' => 'Queue Worker', 'id' => 456],
     ]);
 
+    $actions = [
+        'show all commands',
+        'start command',
+        'stop command',
+        'stop all commands',
+        'restart command',
+        'restart all commands',
+        'refresh commands',
+        'exit'
+    ];
+
     // Set expectations
     $mock->shouldReceive('startAllCommands')->once();
     $mock->shouldReceive('stopCommand')->with('Laravel Server')->once();
@@ -107,10 +133,10 @@ test('it can stop a specific command', function () {
 
     // Simulate the user interaction
     $this->artisan('dev')
-        ->expectsChoice('perform action', 'stop command', $this->actionChoices)
-        ->expectsChoice('choose the command you want to stop', 'Laravel Server', ['Laravel Server', 'Queue Worker'])
+        ->expectsChoice('perform action', 'stop command', $actions)
+        ->expectsChoice('choose the command you want to stop', 'Laravel Server', ['Laravel Server', 'Queue Worker', 'Back'])
         ->expectsOutput('🛑 Stopping development command: Laravel Server...')
-        ->expectsChoice('perform action', 'exit', $this->actionChoices)
+        ->expectsChoice('perform action', 'exit', $actions)
         ->expectsOutput('Exiting...')
         ->assertSuccessful();
 });
@@ -130,12 +156,23 @@ test('it can restart a specific command', function () {
     $mock->shouldReceive('restartCommand')->with('Laravel Server')->once();
     $mock->shouldReceive('stopAllCommands')->once();
 
+    $actions = [
+        'show all commands',
+        'start command',
+        'stop command',
+        'stop all commands',
+        'restart command',
+        'restart all commands',
+        'refresh commands',
+        'exit'
+    ];
+
     // Simulate the user interaction
     $this->artisan('dev')
-        ->expectsChoice('perform action', 'restart command', $this->actionChoices)
-        ->expectsChoice('choose the command you want to restart', 'Laravel Server', ['Laravel Server', 'Queue Worker'])
+        ->expectsChoice('perform action', 'restart command', $actions)
+        ->expectsChoice('choose the command you want to restart', 'Laravel Server', ['Laravel Server', 'Queue Worker', 'Back'])
         ->expectsOutput('🔄 Restarting development command: Laravel Server...')
-        ->expectsChoice('perform action', 'exit', $this->actionChoices)
+        ->expectsChoice('perform action', 'exit', $actions)
         ->expectsOutput('Exiting...')
         ->assertSuccessful();
 });
@@ -154,13 +191,21 @@ test('it shows an error when trying to stop or restart a command if none are run
     $mock->shouldNotReceive('stopCommand');
     $mock->shouldNotReceive('restartCommand');
 
+    $actions = [
+        'show all commands',
+        'start command',
+        'start all commands',
+        'refresh commands',
+        'exit'
+    ];
+
     // Simulate the user interaction
     $this->artisan('dev')
-        ->expectsChoice('perform action', 'stop command', $this->actionChoices)
+        ->expectsChoice('perform action', 'stop command', $actions)
         ->expectsOutput('No running commands to stop')
-        ->expectsChoice('perform action', 'restart command', $this->actionChoices)
+        ->expectsChoice('perform action', 'restart command', $actions)
         ->expectsOutput('No running commands to restart')
-        ->expectsChoice('perform action', 'exit', $this->actionChoices)
+        ->expectsChoice('perform action', 'exit', $actions)
         ->expectsOutput('Exiting...')
         ->assertSuccessful();
 });

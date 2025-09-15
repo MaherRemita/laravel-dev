@@ -6,7 +6,6 @@ use Exception;
 use Illuminate\Contracts\Process\ProcessResult;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Config;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Process;
 use RuntimeException;
 use maherremita\LaravelDev\Enums\LinuxColors;

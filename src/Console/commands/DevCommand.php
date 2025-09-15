@@ -46,17 +46,7 @@ class DevCommand extends Command
             // prompt the user for an action
             $action = $this->choice(
                 'perform action',
-                [
-                    'show all commands',
-                    'start command',
-                    'start all commands',
-                    'stop command',
-                    'stop all commands',
-                    'restart command',
-                    'restart all commands',
-                    'refresh commands',
-                    'exit'
-                ]
+                $this->getActions()
             );
 
             // Show all available commands
@@ -71,8 +61,12 @@ class DevCommand extends Command
                 // Prompt the user to choose the command he wants to start
                 $commandName = $this->choice(
                     'choose the command name you want to start',
-                    array_keys($this->commands)
+                    array_merge(array_keys($this->commands), ['Back'])
                 );
+                // If the user chose 'Back', skip starting any command
+                if ($commandName === 'Back') {
+                    continue;
+                }
                 // Start the selected command
                 $this->startCommand($commandName);
             }
@@ -88,14 +82,17 @@ class DevCommand extends Command
                 $runningCommands = $this->serviceManager->processes->pluck('name')->toArray();
                 if (empty($runningCommands)) {
                     $this->error('No running commands to stop');
-
                     continue;
                 }
                 // prompt the user to choose the command he wants to stop
                 $commandName = $this->choice(
                     'choose the command you want to stop',
-                    $runningCommands
+                    array_merge($runningCommands, ['Back'])
                 );
+                // If the user chose 'Back', skip stopping any command
+                if ($commandName === 'Back') {
+                    continue;
+                }
                 // Stop the selected command
                 $this->stopCommand($commandName);
             }
@@ -111,15 +108,17 @@ class DevCommand extends Command
                 $runningCommands = $this->serviceManager->processes->pluck('name')->toArray();
                 if (empty($runningCommands)) {
                     $this->error('No running commands to restart');
-
                     continue;
                 }
-
                 // prompt the user to choose the command he wants to restart
                 $commandName = $this->choice(
                     'choose the command you want to restart',
-                    $runningCommands
+                    array_merge($runningCommands, ['Back'])
                 );
+                // If the user chose 'Back', skip restarting any command
+                if ($commandName === 'Back') {
+                    continue;
+                }
                 // Restart the selected command
                 $this->restartCommand($commandName);
             }
@@ -144,6 +143,41 @@ class DevCommand extends Command
                 return self::SUCCESS;
             }
         }
+    }
+
+    // get the actions dynamically
+    protected function getActions(): array
+    {
+        $actions = [
+            'show all commands',
+            'start command',
+            'start all commands',
+            'stop command',
+            'stop all commands',
+            'restart command',
+            'restart all commands',
+            'refresh commands',
+            'exit'
+        ];
+
+        // if there are no running commands, remove stop and restart actions
+        if ($this->serviceManager->processes->isEmpty()) {
+            $actions = array_diff($actions, ['stop command', 'stop all commands', 'restart command', 'restart all commands']);
+        
+        //else if there are running commands, remove start all commands action
+        } else {
+            $actions = array_diff($actions, ['start all commands']); 
+        }
+
+        // if all commands running remove the start commands action
+        if ($this->serviceManager->processes->count() === count($this->commands)) {
+            $actions = array_diff($actions, ['start command']);
+        }
+
+        // Re-index the array
+        $actions = array_values($actions);
+
+        return $actions;
     }
 
     // start specific development command

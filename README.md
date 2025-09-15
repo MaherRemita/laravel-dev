@@ -11,6 +11,12 @@ A Laravel package that allows you to launch and manage all your development serv
 -   ⚙️ Interactive menu to start, stop, or restart individual or all commands while running.
 -   ✅ Cross-platform support for Windows, macOS, and Linux.
 
+## 🚀 Demo
+
+<video src="media/video.mp4" controls="controls" style="max-width: 720px;"></video>
+
+*A quick demonstration of how Laravel Dev works.*
+
 ## 📦 Installation
 
 You can install the package via composer:
@@ -131,7 +137,7 @@ The MIT License (MIT). Please see [License File](LICENSE) for more information.
 
 ## 🙏 Credits
 
-- **Author:** [MaherRemitaDZ](https://github.com/MaherRemita)
+- **Author:** [MaherRemita](https://github.com/MaherRemita)
 - **Email:** maherr10203@gmail.com
 
 ---
